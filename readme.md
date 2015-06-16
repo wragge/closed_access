@@ -1,6 +1,6 @@
 #Closed Access
 
-Some experiements in the meaning of 'access' through the National Archives of Australia's RecordSearch database.
+Some experiments in the meaning of 'access' through the National Archives of Australia's RecordSearch database.
 
 ##Requirements
 
