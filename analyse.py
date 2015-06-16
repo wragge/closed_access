@@ -4,7 +4,7 @@ from credentials import MONGOLAB_URL
 import plotly.plotly as py
 from plotly.graph_objs import *
 from operator import itemgetter
-from rstools.client import RSSeriesClient, UsageError
+from recordsearch_tools.client import RSSeriesClient, UsageError
 
 EXCEPTIONS = [
     ['33(1)(a)', r'33\(1\)\(a\)'],

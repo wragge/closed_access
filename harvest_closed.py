@@ -1,6 +1,6 @@
 import time
-from rstools.client import RSSearchClient, RSItemClient
-from pymongo import MongoClient, GEO2D
+from recordsearch_tools.client import RSSearchClient, RSItemClient
+from pymongo import MongoClient
 from credentials import MONGOLAB_URL
 import random
 
