@@ -161,6 +161,25 @@ def add_reasons():
             print result.modified_count
 
 
+def get_titles(reason=None, series=None, year=None):
+    db = get_db()
+    query = {}
+    title = 'data/titles'
+    if reason:
+        query['reasons'] = reason
+        title = '{}-{}'.format(title, reason)
+    if series:
+        query['series'] = series
+        title = '{}-{}'.format(title, series)
+    if year:
+        query['year'] = year
+        title = '{}-{}'.format(title, year)
+    records = db.items.find(query)
+    with open('{}.txt'.format(title), 'wb') as titles:
+        for record in records:
+            titles.write('{}\n'.format(record['title']))
+
+
 def plot_reasons():
     reasons = get_reasons()
     sorted_reasons = sort_reasons(reasons)
