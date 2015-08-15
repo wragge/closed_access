@@ -1,4 +1,5 @@
 import re
+import csv
 from pymongo import MongoClient
 from credentials import MONGOLAB_URL
 import plotly.plotly as py
@@ -59,6 +60,18 @@ def get_normalised_reasons():
         ]
     items = db.items
     return list(items.aggregate(pipeline))
+
+
+def get_relatonships():
+    db = get_db()
+    reasons = get_normalised_reasons()
+    reasons2 = reasons[:]
+    for reason in reasons:
+        for reason2 in reasons2:
+            if not reason['reason'] == reason2['reason']:
+                count = db.items.count({"reasons": {"$all": [reason['reason'], reason2['reason']]}})
+                if count > 0:
+                    print '{} - {} - {}'.format(reason['reason'], reason2['reason'], count)
 
 
 def set_year():
@@ -178,6 +191,26 @@ def get_titles(reason=None, series=None, year=None):
     with open('{}.txt'.format(title), 'wb') as titles:
         for record in records:
             titles.write('{}\n'.format(record['title']))
+
+
+def get_titles_data(reason=None, series=None, year=None):
+    db = get_db()
+    query = {}
+    title = 'data/titles'
+    if reason:
+        query['reasons'] = reason
+        title = '{}-{}'.format(title, reason)
+    if series:
+        query['series'] = series
+        title = '{}-{}'.format(title, series)
+    if year:
+        query['year'] = year
+        title = '{}-{}'.format(title, year)
+    records = db.items.find(query)
+    with open('{}.csv'.format(title), 'wb') as titles_file:
+        titles = csv.writer(titles_file)
+        for record in records:
+            titles.writerow([record['identifier'], record['series'], record['control_symbol'], record['title'], record['year']])
 
 
 def plot_reasons():
