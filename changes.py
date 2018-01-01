@@ -93,30 +93,35 @@ def save_changed_data(dbase=MONGOLAB_URL_2018, access_status=None, reason=None, 
             'url'
             ])
         for record in records:
-
-            period = record['current']['access_decision']['start_date']['date'] - record['access_decision']['start_date']['date']
-            years, days = divmod(period.days, 365.25)
-            if record['access_decision']['start_date']['date'].year != 1900 and record['current']['access_decision']['start_date']['date'].year != 1900:
-                total_days += period.days
-                count += 1
-            titles.writerow([
-                record['current']['identifier'],
-                record['current']['series'],
-                record['current']['control_symbol'],
-                record['current']['title'].encode('utf-8'),
-                record['current']['contents_dates']['date_str'].encode('utf-8'),
-                record['current']['contents_dates']['start_date']['date'].year,
-                record['current']['contents_dates']['end_date']['date'].year,
-                record['access_status'].encode('utf-8'),
-                ' | '.join(record['reasons']),
-                record['access_decision']['start_date']['date'],
-                record['current']['access_status'].encode('utf-8'),
-                ' | '.join(record['current']['reasons']),
-                record['current']['access_decision']['start_date']['date'],
-                period.days,
-                '{} years {} days'.format(int(years), int(round(days))),
-                'http://www.naa.gov.au/cgi-bin/Search?O=I&Number={}'.format(record['current']['identifier'])
-                ])
+            try:
+                period = record['current']['access_decision']['start_date']['date'] - record['access_decision']['start_date']['date']
+                years, days = divmod(period.days, 365.25)
+                period_days = period.days
+            except (TypeError, KeyError):
+                # Some broken record...
+                pass
+            else:
+                if record['access_decision']['start_date']['date'].year != 1900 and record['current']['access_decision']['start_date']['date'].year != 1900:
+                    total_days += period.days
+                    count += 1
+                titles.writerow([
+                    record['current']['identifier'],
+                    record['current']['series'],
+                    record['current']['control_symbol'],
+                    title,
+                    record['current']['contents_dates']['date_str'].encode('utf-8'),
+                    record['current']['contents_dates']['start_date']['date'].year,
+                    record['current']['contents_dates']['end_date']['date'].year,
+                    record['access_status'].encode('utf-8'),
+                    ' | '.join(record['reasons']),
+                    record['access_decision']['start_date']['date'],
+                    record['current']['access_status'].encode('utf-8'),
+                    ' | '.join(record['current']['reasons']),
+                    record['current']['access_decision']['start_date']['date'],
+                    period_days,
+                    '{} years {} days'.format(int(years), int(round(days))),
+                    'http://www.naa.gov.au/cgi-bin/Search?O=I&Number={}'.format(record['current']['identifier'])
+                    ])
     print total_days
     average_days = total_days / count
     years, days = divmod(average_days, 365.25)
