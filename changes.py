@@ -133,7 +133,7 @@ def get_reason_changes(db):
     return list(db.changes.aggregate(pipeline))
 
 
-def count_changes(db=MONGOLAB_URL_2017, reason=None, series=None, decision_year=None):
+def count_changes(db=MONGOLAB_URL_2018, reason=None, series=None, decision_year=None):
     client = MongoClient(db)
     db = client.get_default_database()
     query = {}
@@ -280,7 +280,7 @@ def plot_reasons_total_changes(dbase={'year': '2017', 'db': MONGOLAB_URL_2018}):
 
 
 
-def plot_reasons_comparison(dbs=[{'year': '2016', 'db': MONGOLAB_URL_2016}, {'year': '2017', 'db': MONGOLAB_URL_2017}]):
+def plot_reasons_comparison(dbs=[{'year': '2016 harvest', 'db': MONGOLAB_URL_2016}, {'year': '2017 harvest', 'db': MONGOLAB_URL_2017}, {'year': '2018 harvest', 'db': MONGOLAB_URL_2018}]):
     traces = []
     years = []
     for year in dbs:
@@ -295,7 +295,7 @@ def plot_reasons_comparison(dbs=[{'year': '2016', 'db': MONGOLAB_URL_2016}, {'ye
         )
         traces.append(trace)
     layout = go.Layout(
-        title='<b>Closed files</b><br>Totals by reason, 2015-2016',
+        title='<b>Closed files</b><br>Totals by reason, 2015-2017',
         barmode='group',
         xaxis=go.XAxis(
             title='Reason the file is closed'
