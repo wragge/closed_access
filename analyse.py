@@ -342,10 +342,10 @@ def plot_series(reason=None):
     series_list = get_series(reason=reason)
     if reason:
         title = 'Most common series of items \'Closed\' due to \'{}\''.format(reason)
-        filename = 'closed-by-series-{}'.format(reason)
+        filename = 'closed-by-series-2017-{}'.format(reason)
     else:
         title = 'Most common series of \'Closed\' files'
-        filename = 'closed-by-series'
+        filename = 'closed-by-series-2017'
     x = []
     y = []
     text = []

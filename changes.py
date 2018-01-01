@@ -314,7 +314,7 @@ def plot_reasons_comparison(dbs=[{'year': '2016 harvest', 'db': MONGOLAB_URL_201
     plot_url = py.plot(fig, filename='totals-by-reason-compared-{}'.format('-'.join(years)))
 
 
-def plot_series(dbase={'year': '2016', 'db': MONGOLAB_URL_2017}, reason=None, decision_year=None):
+def plot_series(dbase={'year': '2017', 'db': MONGOLAB_URL_2018}, reason=None, decision_year=None):
     client = MongoClient(dbase['db'])
     db = client.get_default_database()
     series_list = get_series(db, reason=reason, decision_year=decision_year)
