@@ -1,7 +1,7 @@
 import re
 import csv
 from pymongo import MongoClient
-from credentials import MONGOLAB_URL
+from credentials import MONGOLAB_URL, MONGOLAB_URL_2017, MONGOLAB_URL_2016, MONGOLAB_URL_2018
 import plotly.plotly as py
 from plotly.graph_objs import *
 from operator import itemgetter
@@ -26,12 +26,13 @@ EXCEPTIONS = [
     ['33(2)(b)', r'33\(2\)[a\(\)]*\(b\)'],
     ['33(3)(a)(i)', r'33\(3\)\(a\)\(i\)'],
     ['33(3)(a)(ii)', r'33\(3\)\(a\)\(ii\)'],
-    ['33(3)(b)', r'33\(3\)[ai\(\) &]*\(b\)']
+    ['33(3)(b)', r'33\(3\)[ai\(\) &]*\(b\)'],
+    ['Closed period', r'Closed period.*']
 ]
 
 
 def get_db():
-    dbclient = MongoClient(MONGOLAB_URL)
+    dbclient = MongoClient(MONGOLAB_URL_2018)
     db = dbclient.get_default_database()
     return db
 
@@ -157,6 +158,11 @@ def sort_reasons(reasons):
     return sorted_reasons
 
 
+def reset_reasons():
+    db = get_db()
+    db.items.update_many({}, {'$set': {'reasons': []}})
+
+
 def add_reasons():
     '''
     Normalises the reasons, based on the sorting rules and writes them back to the db.
@@ -175,7 +181,7 @@ def add_reasons():
             print result.modified_count
 
 
-def get_titles(reason=None, series=None, year=None):
+def get_titles(reason=None, series=None, year=None, decision_year=None):
     db = get_db()
     query = {}
     title = 'data/titles'
@@ -188,10 +194,15 @@ def get_titles(reason=None, series=None, year=None):
     if year:
         query['year'] = year
         title = '{}-{}'.format(title, year)
+    if decision_year:
+        title = '{}-closed-in-{}'.format(title, decision_year)
+        decision_date_start = datetime.datetime(decision_year, 1, 1, 0, 0, 0)
+        decision_date_end = datetime.datetime(decision_year, 12, 31, 0, 0, 0)
+        query['access_decision.start_date.date'] = {'$gte': decision_date_start, '$lte': decision_date_end}
     records = db.items.find(query)
     with open('{}.txt'.format(title), 'wb') as titles:
         for record in records:
-            titles.write('{}\n'.format(record['title']))
+            titles.write('{}\n'.format(record['title'].encode('utf-8')))
 
 
 def get_titles_data(reason=None, series=None, year=None, decision_year=None):
@@ -230,15 +241,15 @@ def get_titles_data(reason=None, series=None, year=None, decision_year=None):
             ])
         for record in records:
             try:
-                series_title = record['series_title']
-            except KeyError:
+                series_title = record['series_title'].encode('utf-8')
+            except (KeyError, AttributeError):
                 series_title = ''
             titles.writerow([
                 record['identifier'],
                 record['control_symbol'],
                 record['title'].encode('utf-8'),
                 record['series'],
-                series_title.encode('utf-8'),
+                series_title,
                 record['contents_dates']['date_str'].encode('utf-8'),
                 record['contents_dates']['start_date']['date'].year,
                 record['contents_dates']['end_date']['date'].year,
@@ -274,7 +285,7 @@ def plot_reasons():
         ),
     )
     fig = Figure(data=data, layout=layout)
-    plot_url = py.plot(fig, filename='totals-by-reason')
+    plot_url = py.plot(fig, filename='totals-by-reason-2017')
 
 
 def plot_ages(reason=None):
@@ -365,4 +376,3 @@ def plot_series(reason=None):
     )
     fig = Figure(data=data, layout=layout)
     plot_url = py.plot(fig, filename=filename)
-

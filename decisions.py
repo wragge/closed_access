@@ -19,17 +19,12 @@ def get_age_at_decision(age):
     db = get_db()
     total = 0
     reasons = {}
-    #pipeline = [
-    #    {'$group': {'_id': '$access_decision.start_date.date'}},
-    #    {'$project': {'_id': 0, 'date': '$_id'}}
-    #]
     for year in range(1966, 2016):
         start_date = datetime.datetime(year, 1, 1)
         end_date = datetime.datetime(year, 12, 31)
         content_date = datetime.datetime(year - int(age), 12, 31)
         # age = decision['date'] - relativedelta(years=int(age))
         total += db.items.find({'access_decision.start_date.date': {'$gte': start_date, '$lte': end_date}, 'contents_dates.end_date.date': {'$gte': datetime.datetime(1800, 12, 31), '$lte': content_date}, 'reasons': {'$ne': ['Parliament Class A']}}).count()
-        print total
         pipeline = [
             {'$match': {'access_decision.start_date.date': {'$gte': start_date, '$lte': end_date}, 'contents_dates.end_date.date': {'$gte': datetime.datetime(1800, 12, 31), '$lte': content_date}}},
             {'$unwind': '$reasons'},
@@ -51,7 +46,7 @@ def get_age_at_decision(age):
 
 
 def get_all_ages():
-    for age in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
+    for age in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110]:
         get_age_at_decision(age)
 
 

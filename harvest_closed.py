@@ -26,7 +26,8 @@ EXCEPTIONS = [
     ['33(2)(b)', r'33\(2\)[a\(\)]*\(b\)'],
     ['33(3)(a)(i)', r'33\(3\)\(a\)\(i\)'],
     ['33(3)(a)(ii)', r'33\(3\)\(a\)\(ii\)'],
-    ['33(3)(b)', r'33\(3\)[ai\(\) &]*\(b\)']
+    ['33(3)(b)', r'33\(3\)[ai\(\) &]*\(b\)'],
+    ['Closed period', r'Closed period.*']
 ]
 
 
@@ -86,45 +87,43 @@ class SearchHarvester():
         while self.pages_complete < self.total_pages:
             response = self.client.search(access='Closed', page=page, sort='9')
             for result in response['results']:
-                item = item_client.get_summary(entity_id=result['identifier'])
-                item['_id'] = item['identifier']
-                item['random_id'] = [random.random(), 0]
-                # Normalise reasons
-                item['reasons'] = []
-                # item['year'] = item['contents_dates']['end_date']['date'].year
-                for reason in item['access_reason']:
-                    matched = False
-                    for exception, pattern in EXCEPTIONS:
-                        if re.match(pattern, reason['reason']):
-                            item['reasons'].append(exception)
-                            matched = True
-                    if not matched:
-                        item['reasons'].append(reason['reason'])
-                # Get series and agency info
-                print item['series']
-                series = self.series.find_one({'identifier': item['series']})
-                if not series:
-                    try:
-                        series = series_client.get_summary(entity_id=item['series'])
-                        agencies = series_client.get_controlling_agencies(entity_id=item['series'])
-                        series['controlling_agencies'] = agencies
-                        self.series.insert(series)
-                    except UsageError:
-                        series = None
-                if series:
-                    item['series_title'] = series['title']
-                    if series['controlling_agencies']:
-                        item['agencies'] = []
-                        for agency in series['controlling_agencies']:
-                            if not agency['end_date']:
-                                item['agencies'].append(agency)
-                old_item = self.items.find_one_and_replace({'_id': item['identifier']}, item, upsert=True)
-                if old_item and ('harvests' in old_item) and (self.harvest_date not in old_item['harvests']):
-                    harvests = old_item['harvests'].append(self.harvest_date)
-                else:
-                    harvests = [self.harvest_date]
-                self.items.update_one({'_id': item['identifier']}, {'$set': {'harvests': harvests}})
-                print item['identifier']
+                exists = self.items.find_one({'_id': result['identifier'], 'harvests': self.harvest_date})
+                if not exists:
+                    item = item_client.get_summary(entity_id=result['identifier'])
+                    item['_id'] = item['identifier']
+                    item['random_id'] = [random.random(), 0]
+                    # Normalise reasons
+                    item['reasons'] = []
+                    # item['year'] = item['contents_dates']['end_date']['date'].year
+                    for reason in item['access_reason']:
+                        matched = False
+                        for exception, pattern in EXCEPTIONS:
+                            if re.match(pattern, reason['reason']):
+                                item['reasons'].append(exception)
+                                matched = True
+                        if not matched:
+                            item['reasons'].append(reason['reason'])
+                    # Get series and agency info
+                    print item['series']
+                    series = self.series.find_one({'identifier': item['series']})
+                    if not series:
+                        try:
+                            series = series_client.get_summary(entity_id=item['series'], include_access_status=False)
+                            # agencies = series_client.get_controlling_agencies(entity_id=item['series'])
+                            # series['controlling_agencies'] = agencies
+                            self.series.insert(series)
+                        except UsageError:
+                            series = None
+                    if series:
+                        item['series_title'] = series['title']
+                        if series['controlling_agencies']:
+                            item['agencies'] = []
+                            for agency in series['controlling_agencies']:
+                                if not agency['end_date'] or not agency['end_date']['date']:
+                                    item['agencies'].append(agency)
+                    item['harvests'] = [self.harvest_date]
+                    self.items.insert_one(item)
+                    print item['identifier']
             self.pages_complete += 1
             page += 1
             print '{} pages complete'.format(self.pages_complete)
@@ -439,5 +438,3 @@ def get_missing_series(harvest):
                 db.series.insert_one(series)
             except UsageError:
                 print 'Not found'
-
-
