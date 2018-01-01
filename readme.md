@@ -20,7 +20,7 @@ Various tools, experiments and plots to explore the closed files.
 
 Explore differences between annual harvests.
 
-##Results
+## Results
 
 See the [Closed Access](http://closedaccess.herokuapp.com/) site to explore the 2016 harvest.
 
